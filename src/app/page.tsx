@@ -1,53 +1,114 @@
 import Link from "next/link";
 
-import { LatestPost } from "~/app/_components/post";
-import { api, HydrateClient } from "~/trpc/server";
+import { AuthStatus } from "~/components/auth/auth-status";
+import { LEVEL_LABELS, LEVEL_ORDER } from "~/lib/exam";
+import type { ExamLevel } from "~/server/db/schema";
+import { api } from "~/trpc/server";
+
+// DB를 읽으므로 빌드 시 정적 프리렌더 대신 요청 시 렌더링한다.
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
-	const hello = await api.post.hello({ text: "from tRPC" });
+	const exams = await api.exam.list();
 
-	void api.post.getLatest.prefetch();
+	const byLevel = LEVEL_ORDER.map((level) => ({
+		level,
+		exams: exams.filter((e) => e.level === level),
+	})).filter((group) => group.exams.length > 0);
 
 	return (
-		<HydrateClient>
-			<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-				<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-					<h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-						Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-					</h1>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/usage/first-steps"
-							target="_blank"
-						>
-							<h3 className="text-2xl font-bold">First Steps →</h3>
-							<div className="text-lg">
-								Just the basics - Everything you need to know to set up your
-								database and authentication.
-							</div>
-						</Link>
-						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/introduction"
-							target="_blank"
-						>
-							<h3 className="text-2xl font-bold">Documentation →</h3>
-							<div className="text-lg">
-								Learn more about Create T3 App, the libraries it uses, and how
-								to deploy it.
-							</div>
-						</Link>
+		<main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100">
+			<div className="container mx-auto flex max-w-5xl flex-col gap-12 px-4 py-16">
+				<header className="flex flex-col gap-3">
+					<div className="flex items-start justify-between gap-4">
+						<h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+							Mock <span className="text-sky-400">Exam</span>
+						</h1>
+						<div className="flex shrink-0 items-center gap-2">
+							<AuthStatus />
+							<Link
+								href="/admin"
+								className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
+							>
+								시험 관리
+							</Link>
+						</div>
 					</div>
-					<div className="flex flex-col items-center gap-2">
-						<p className="text-2xl text-white">
-							{hello ? hello.greeting : "Loading tRPC query..."}
-						</p>
-					</div>
+					<p className="text-lg text-slate-300">
+						중학교 · 고등학교 · 대학 · 대학원 모의고사를 풀고 바로 채점받으세요.
+					</p>
+				</header>
 
-					<LatestPost />
-				</div>
-			</main>
-		</HydrateClient>
+				{byLevel.length === 0 ? (
+					<EmptyState />
+				) : (
+					<div className="flex flex-col gap-10">
+						{byLevel.map((group) => (
+							<LevelSection
+								key={group.level}
+								level={group.level}
+								exams={group.exams}
+							/>
+						))}
+					</div>
+				)}
+			</div>
+		</main>
+	);
+}
+
+function LevelSection({
+	level,
+	exams,
+}: {
+	level: ExamLevel;
+	exams: Awaited<ReturnType<typeof api.exam.list>>;
+}) {
+	return (
+		<section className="flex flex-col gap-4">
+			<h2 className="text-2xl font-bold text-slate-200">
+				{LEVEL_LABELS[level]}
+			</h2>
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{exams.map((exam) => (
+					<Link
+						key={exam.id}
+						href={`/exam/${exam.slug}`}
+						className="flex flex-col gap-2 rounded-xl bg-white/5 p-5 ring-1 ring-white/10 transition hover:bg-white/10 hover:ring-sky-400/40"
+					>
+						<div className="flex items-center gap-2 text-xs text-slate-400">
+							{exam.subject && <span>{exam.subject}</span>}
+							<span>· 문항 {exam.questionCount}개</span>
+							{exam.durationMinutes != null && (
+								<span>· {exam.durationMinutes}분</span>
+							)}
+						</div>
+						<h3 className="text-lg font-semibold text-slate-100">
+							{exam.title}
+						</h3>
+						{exam.description && (
+							<p className="line-clamp-2 text-sm text-slate-400">
+								{exam.description}
+							</p>
+						)}
+					</Link>
+				))}
+			</div>
+		</section>
+	);
+}
+
+function EmptyState() {
+	return (
+		<div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-10 text-center">
+			<p className="text-lg font-medium text-slate-200">
+				아직 공개된 모의고사가 없습니다.
+			</p>
+			<p className="mt-2 text-sm text-slate-400">
+				샘플 데이터를 넣으려면{" "}
+				<code className="rounded bg-black/40 px-1.5 py-0.5">pnpm db:seed</code>{" "}
+				를 실행하세요.
+			</p>
+		</div>
 	);
 }
