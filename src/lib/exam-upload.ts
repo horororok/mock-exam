@@ -7,13 +7,13 @@ import { EXAM_LEVELS } from "~/server/db/schema";
 /* -------------------------------------------------------------------------- */
 
 const choiceSchema = z.object({
-	content: z.string().min(1, "선택지 내용은 비울 수 없습니다."),
+	content: z.string().min(1, "선택지 내용은 비울 수 없습니다.").max(1000),
 	correct: z.boolean().optional().default(false),
 });
 
 const baseQuestionFields = {
-	prompt: z.string().min(1, "발문(prompt)은 필수입니다."),
-	passage: z.string().optional(),
+	prompt: z.string().min(1, "발문(prompt)은 필수입니다.").max(5000),
+	passage: z.string().max(20000).optional(),
 	points: z.number().int().positive().max(1000).optional().default(1),
 };
 
@@ -22,7 +22,8 @@ const singleQuestionSchema = z.object({
 	...baseQuestionFields,
 	choices: z
 		.array(choiceSchema)
-		.min(2, "객관식은 선택지가 2개 이상이어야 합니다."),
+		.min(2, "객관식은 선택지가 2개 이상이어야 합니다.")
+		.max(50, "선택지는 50개까지입니다."),
 });
 
 const multipleQuestionSchema = z.object({
@@ -30,21 +31,23 @@ const multipleQuestionSchema = z.object({
 	...baseQuestionFields,
 	choices: z
 		.array(choiceSchema)
-		.min(2, "객관식은 선택지가 2개 이상이어야 합니다."),
+		.min(2, "객관식은 선택지가 2개 이상이어야 합니다.")
+		.max(50, "선택지는 50개까지입니다."),
 });
 
 const shortQuestionSchema = z.object({
 	type: z.literal("short"),
 	...baseQuestionFields,
 	answers: z
-		.array(z.string().min(1))
-		.min(1, "단답형은 허용 답안이 1개 이상이어야 합니다."),
+		.array(z.string().min(1).max(500))
+		.min(1, "단답형은 허용 답안이 1개 이상이어야 합니다.")
+		.max(50, "허용 답안은 50개까지입니다."),
 });
 
 const essayQuestionSchema = z.object({
 	type: z.literal("essay"),
 	...baseQuestionFields,
-	modelAnswer: z.string().optional(),
+	modelAnswer: z.string().max(20000).optional(),
 });
 
 export const questionUploadSchema = z.discriminatedUnion("type", [
@@ -70,7 +73,8 @@ export const examUploadSchema = z
 		published: z.boolean().optional().default(true),
 		questions: z
 			.array(questionUploadSchema)
-			.min(1, "문항이 1개 이상이어야 합니다."),
+			.min(1, "문항이 1개 이상이어야 합니다.")
+			.max(500, "한 시험의 문항은 500개까지입니다."),
 	})
 	// 정답 개수 규칙은 discriminatedUnion 멤버에 .refine을 못 붙이므로 여기서 검증
 	.superRefine((exam, ctx) => {
