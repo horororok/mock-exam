@@ -258,7 +258,7 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 			</ol>
 
 			{!isDone && (
-				<div className="sticky bottom-4 flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/90 p-4 shadow-lg backdrop-blur">
+				<div className="sticky bottom-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/90 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4">
 					<div className="flex items-center gap-3 text-sm">
 						{secondsLeft != null && (
 							<span
@@ -278,7 +278,7 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 						type="button"
 						onClick={requestSubmit}
 						disabled={submit.isPending}
-						className="rounded-lg bg-sky-600 px-6 py-2 font-semibold text-white transition hover:bg-sky-700 disabled:opacity-60"
+						className="w-full rounded-lg bg-sky-600 px-6 py-2.5 font-semibold text-white transition hover:bg-sky-700 disabled:opacity-60 sm:w-auto sm:py-2"
 					>
 						{submit.isPending ? "채점 중..." : "제출하고 채점하기"}
 					</button>

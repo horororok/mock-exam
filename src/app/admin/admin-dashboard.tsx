@@ -82,7 +82,7 @@ export function AdminDashboard() {
 					{list.data.map((exam) => (
 						<li
 							key={exam.id}
-							className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3"
+							className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
 						>
 							<div className="min-w-0">
 								<div className="flex items-center gap-2 text-xs text-slate-500">

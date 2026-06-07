@@ -43,7 +43,7 @@ export function HistoryList() {
 				return (
 					<li
 						key={a.id}
-						className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4"
+						className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
 					>
 						<div className="min-w-0">
 							<div className="flex items-center gap-2 text-xs text-slate-500">

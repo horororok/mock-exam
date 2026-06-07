@@ -29,11 +29,11 @@ export default async function Home() {
 		<main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100">
 			<div className="container mx-auto flex max-w-5xl flex-col gap-12 px-4 py-16">
 				<header className="flex flex-col gap-3">
-					<div className="flex items-start justify-between gap-4">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
 						<h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
 							Mock <span className="text-sky-400">Exam</span>
 						</h1>
-						<div className="flex shrink-0 items-center gap-2">
+						<div className="flex flex-wrap items-center gap-2">
 							<AuthStatus />
 							{canAdmin && (
 								<Link
