@@ -41,7 +41,8 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 	const [secondsLeft, setSecondsLeft] = useState<number | null>(() =>
 		exam.durationMinutes != null ? exam.durationMinutes * 60 : null,
 	);
-	const autoSubmittedRef = useRef(false);
+	// 자동(타이머)·수동 제출이 공유하는 단일 가드 — 중복 제출(응시 2건) 방지
+	const submittedRef = useRef(false);
 
 	const submit = api.exam.submit.useMutation({
 		onSuccess: (data) => {
@@ -54,7 +55,10 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 				window.scrollTo({ top: 0, behavior: "smooth" });
 			}
 		},
-		onError: (err) => toast.error(`제출 실패: ${err.message}`),
+		onError: (err) => {
+			submittedRef.current = false; // 실패 시 재시도 허용
+			toast.error(`제출 실패: ${err.message}`);
+		},
 	});
 
 	const resultByQuestion = useMemo(() => {
@@ -97,6 +101,8 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 	}
 
 	function doSubmit() {
+		if (submittedRef.current) return; // 이미 제출(또는 제출 중)이면 무시
+		submittedRef.current = true;
 		submit.mutate({
 			slug: exam.slug,
 			anonId: getAnonId(),
@@ -135,8 +141,7 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 
 	// 시간 종료 시 1회 자동 제출
 	useEffect(() => {
-		if (secondsLeft === 0 && !isDone && !autoSubmittedRef.current) {
-			autoSubmittedRef.current = true;
+		if (secondsLeft === 0 && !isDone && !submittedRef.current) {
 			toast.info("시간이 종료되어 자동 제출됩니다.");
 			doSubmit();
 		}
