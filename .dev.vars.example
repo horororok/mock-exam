@@ -1,3 +1,7 @@
 CLOUDFLARE_ACCOUNT_ID='x'
 CLOUDFLARE_D1_DATABASE_ID='x'
 CLOUDFLARE_TOKEN='x'
+
+# /admin(시험 등록/삭제) 보호용 토큰. 설정하면 x-admin-token 헤더가 일치해야 함.
+# 비워두면 /admin은 열린 상태(로컬 개발 편의).
+ADMIN_TOKEN=''

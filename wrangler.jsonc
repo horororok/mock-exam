@@ -7,39 +7,36 @@
 	"name": "mock-exam",
 	"main": ".open-next/worker.js",
 	"compatibility_date": "2026-03-12",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
 		"binding": "ASSETS",
-		"directory": ".open-next/assets"
+		"directory": ".open-next/assets",
 	},
 	"images": {
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image
-		"binding": "IMAGES"
+		"binding": "IMAGES",
 	},
 	"services": [
 		{
 			// Self-reference service binding, the service name must match the worker name
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "t3-cloudflare"
-		}
+			"service": "mock-exam",
+		},
 	],
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "prod-d1",
-			"database_id": "REPLACE_WITH_YOUR_DATABASE_ID",
-			"migrations_dir": "drizzle"
-		}
+			"database_name": "mock-exam-db",
+			"database_id": "fd007d5f-36d0-497f-8cd7-dfd3fdef519d",
+			"migrations_dir": "drizzle",
+		},
 	],
-	"upload_source_maps": true
+	"upload_source_maps": true,
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

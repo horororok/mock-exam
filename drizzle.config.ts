@@ -9,7 +9,7 @@ import { env } from "~/env";
 const prod = env.NODE_ENV === "production";
 
 const schema = "./src/server/db/schema.ts";
-const tablesFilter = ["t3-cloudflare_*"];
+const tablesFilter = ["mock_exam_*"];
 
 let sqliteDbFile = "";
 if (!prod) {
@@ -24,8 +24,8 @@ if (!prod) {
 	if (!file) {
 		console.warn(
 			"\n\n\n",
-			"No .sqlite file found, querying prod-d1 to generate local sqlite files\n",
-			"Attempting to run: wrangler d1 execute prod-d1 --local --command=\"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
+			"No .sqlite file found, querying mock-exam-db to generate local sqlite files\n",
+			"Attempting to run: wrangler d1 execute mock-exam-db --local --command=\"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
 			"Re-run this script after the command completes successfully",
 		);
 		const wrangler = spawnSync(
@@ -33,7 +33,7 @@ if (!prod) {
 			[
 				"d1",
 				"execute",
-				"prod-d1",
+				"mock-exam-db",
 				"--local",
 				"--command=\"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
 			],
@@ -48,7 +48,7 @@ if (!prod) {
 	}
 	if (!file) {
 		throw new Error(
-			"Failed to find a local D1 sqlite file. Run `wrangler d1 execute prod-d1 --local` to initialize local state.",
+			"Failed to find a local D1 sqlite file. Run `wrangler d1 execute mock-exam-db --local` to initialize local state.",
 		);
 	}
 	sqliteDbFile = path.join(dir, file);
