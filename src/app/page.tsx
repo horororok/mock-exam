@@ -30,8 +30,16 @@ export default async function Home() {
 			<div className="container mx-auto flex max-w-5xl flex-col gap-12 px-4 py-16">
 				<header className="flex flex-col gap-3">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-						<h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-							Mock <span className="text-sky-400">Exam</span>
+						<h1 className="flex items-center gap-2 text-4xl font-extrabold tracking-tight sm:gap-3 sm:text-5xl">
+							{/* eslint-disable-next-line @next/next/no-img-element -- 정적 SVG 로고, 최적화 불필요 */}
+							<img
+								src="/logo-icon.svg"
+								alt=""
+								className="h-8 w-8 sm:h-10 sm:w-10"
+							/>
+							<span>
+								Mock <span className="text-sky-400">Exam</span>
+							</span>
 						</h1>
 						<div className="flex flex-wrap items-center gap-2">
 							<AuthStatus />
@@ -46,7 +54,7 @@ export default async function Home() {
 						</div>
 					</div>
 					<p className="text-lg text-slate-300">
-						중학교 · 고등학교 · 대학 · 대학원 모의고사를 풀고 바로 채점받으세요.
+						모의고사를 풀고 바로 채점받으세요.
 					</p>
 				</header>
 
