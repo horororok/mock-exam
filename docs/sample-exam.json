@@ -1,0 +1,44 @@
+{
+	"title": "샘플 모의고사 (모든 유형)",
+	"level": "high",
+	"subject": "종합",
+	"durationMinutes": 20,
+	"description": "단일정답·복수정답·단답형·서술형을 모두 담은 예시",
+	"published": true,
+	"questions": [
+		{
+			"type": "single",
+			"prompt": "다음 빈칸에 알맞은 것은? She ___ to school every day.",
+			"points": 4,
+			"choices": [
+				{ "content": "go", "correct": false },
+				{ "content": "goes", "correct": true },
+				{ "content": "going", "correct": false },
+				{ "content": "gone", "correct": false }
+			]
+		},
+		{
+			"type": "multiple",
+			"prompt": "다음 중 소수(prime number)를 모두 고르시오.",
+			"points": 4,
+			"choices": [
+				{ "content": "2", "correct": true },
+				{ "content": "3", "correct": true },
+				{ "content": "4", "correct": false },
+				{ "content": "9", "correct": false }
+			]
+		},
+		{
+			"type": "short",
+			"prompt": "대한민국의 수도는?",
+			"points": 2,
+			"answers": ["서울", "서울특별시"]
+		},
+		{
+			"type": "essay",
+			"prompt": "기후변화의 원인과 대응 방안을 200자 내외로 서술하시오.",
+			"points": 10,
+			"modelAnswer": "온실가스 증가가 주된 원인이며, 재생에너지 확대·에너지 효율화·탄소세 등 정책적·기술적 대응이 필요하다."
+		}
+	]
+}

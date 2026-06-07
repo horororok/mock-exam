@@ -1,0 +1,102 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://mock-exam/exam.schema.json",
+	"title": "Mock Exam Upload",
+	"description": "모의고사 업로드 JSON 형식. 구조 검증용 — 'single은 정답 정확히 1개', 'multiple은 정답 1개 이상' 규칙은 서버에서 추가로 검증한다.",
+	"type": "object",
+	"required": ["title", "level", "questions"],
+	"additionalProperties": false,
+	"properties": {
+		"title": { "type": "string", "minLength": 1 },
+		"slug": { "type": "string", "minLength": 1, "maxLength": 128 },
+		"level": { "enum": ["middle", "high", "university", "graduate"] },
+		"subject": { "type": "string" },
+		"durationMinutes": { "type": "integer", "minimum": 1 },
+		"description": { "type": "string" },
+		"published": { "type": "boolean" },
+		"questions": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "$ref": "#/definitions/question" }
+		}
+	},
+	"definitions": {
+		"choice": {
+			"type": "object",
+			"required": ["content"],
+			"additionalProperties": false,
+			"properties": {
+				"content": { "type": "string", "minLength": 1 },
+				"correct": { "type": "boolean" }
+			}
+		},
+		"question": {
+			"oneOf": [
+				{ "$ref": "#/definitions/single" },
+				{ "$ref": "#/definitions/multiple" },
+				{ "$ref": "#/definitions/short" },
+				{ "$ref": "#/definitions/essay" }
+			]
+		},
+		"single": {
+			"type": "object",
+			"required": ["type", "prompt", "choices"],
+			"additionalProperties": false,
+			"properties": {
+				"type": { "const": "single" },
+				"prompt": { "type": "string", "minLength": 1 },
+				"passage": { "type": "string" },
+				"points": { "type": "integer", "minimum": 1, "maximum": 1000 },
+				"choices": {
+					"type": "array",
+					"minItems": 2,
+					"items": { "$ref": "#/definitions/choice" }
+				}
+			}
+		},
+		"multiple": {
+			"type": "object",
+			"required": ["type", "prompt", "choices"],
+			"additionalProperties": false,
+			"properties": {
+				"type": { "const": "multiple" },
+				"prompt": { "type": "string", "minLength": 1 },
+				"passage": { "type": "string" },
+				"points": { "type": "integer", "minimum": 1, "maximum": 1000 },
+				"choices": {
+					"type": "array",
+					"minItems": 2,
+					"items": { "$ref": "#/definitions/choice" }
+				}
+			}
+		},
+		"short": {
+			"type": "object",
+			"required": ["type", "prompt", "answers"],
+			"additionalProperties": false,
+			"properties": {
+				"type": { "const": "short" },
+				"prompt": { "type": "string", "minLength": 1 },
+				"passage": { "type": "string" },
+				"points": { "type": "integer", "minimum": 1, "maximum": 1000 },
+				"answers": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "type": "string", "minLength": 1 }
+				}
+			}
+		},
+		"essay": {
+			"type": "object",
+			"required": ["type", "prompt"],
+			"additionalProperties": false,
+			"properties": {
+				"type": { "const": "essay" },
+				"prompt": { "type": "string", "minLength": 1 },
+				"passage": { "type": "string" },
+				"points": { "type": "integer", "minimum": 1, "maximum": 1000 },
+				"modelAnswer": { "type": "string" }
+			}
+		}
+	}
+}
