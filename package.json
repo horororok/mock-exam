@@ -1,0 +1,69 @@
+{
+  "name": "t3-cloudflare",
+  "version": "0.1.0",
+  "private": true,
+  "repository": {
+    "url": "https://github.com/exectx/t3-cloudflare"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "check": "oxfmt --check . && oxlint . && tsc --noEmit",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "db:check": "drizzle-kit check",
+    "db:check:prod": "pnpm with-env cross-env NODE_ENV=production drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "pnpm with-env cross-env NODE_ENV=production drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:push:prod": "pnpm with-env cross-env NODE_ENV=production drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:studio:prod": "pnpm with-env cross-env NODE_ENV=production drizzle-kit studio",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e .dev.vars --"
+  },
+  "dependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
+    "@t3-oss/env-nextjs": "^0.13.11",
+    "@tanstack/react-query": "^5.100.14",
+    "@trpc/client": "^11.16.0",
+    "@trpc/react-query": "^11.16.0",
+    "@trpc/server": "^11.16.0",
+    "drizzle-orm": "^0.45.2",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "server-only": "^0.0.1",
+    "superjson": "^2.2.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^20.19.41",
+    "@types/react": "^19.2.16",
+    "@types/react-dom": "^19.0.0",
+    "cross-env": "^10.0.0",
+    "dotenv-cli": "^8.0.0",
+    "drizzle-kit": "^0.31.10",
+    "opennextjs-cloudflare": "^1.0.0",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.8.2",
+    "wrangler": "^4.98.0"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "ct3aMetadata": {
+    "initVersion": "7.40.0"
+  }
+}

@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "**.mdx"
+      - ".gitignore"
+      - ".env.example"
+      - ".dev.vars.example"
+      - "public/**"
+      - "LICENSE"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "**.mdx"
+      - ".gitignore"
+      - ".env.example"
+      - ".dev.vars.example"
+      - "public/**"
+      - "LICENSE"
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SKIP_ENV_VALIDATION: true
+
+jobs:
+  lint:
+    name: Lint & Format
+    if: github.repository == 'exectx/t3-cloudflare'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+
+  typecheck:
+    name: Typecheck
+    if: github.repository == 'exectx/t3-cloudflare'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+
+  build:
+    name: Build
+    if: github.repository == 'exectx/t3-cloudflare'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec opennextjs-cloudflare build
