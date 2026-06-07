@@ -15,6 +15,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import { getDb } from "~/server/db";
+import { chunk } from "~/server/db/chunk";
 import {
 	attemptAnswers,
 	attempts,
@@ -86,14 +87,16 @@ async function insertExam(
 				.returning({ id: questions.id });
 
 			if (question && (q.type === "single" || q.type === "multiple")) {
-				await db.insert(choices).values(
-					q.choices.map((c, ci) => ({
-						questionId: question.id,
-						order: ci + 1,
-						content: c.content,
-						isCorrect: c.correct,
-					})),
-				);
+				const choiceRows = q.choices.map((c, ci) => ({
+					questionId: question.id,
+					order: ci + 1,
+					content: c.content,
+					isCorrect: c.correct,
+				}));
+				// D1 100 파라미터 제한 (선택지 4컬럼 → 20행씩)
+				for (const part of chunk(choiceRows, 20)) {
+					await db.insert(choices).values(part);
+				}
 			}
 		}
 	} catch (err) {
@@ -341,21 +344,23 @@ export const examRouter = createTRPCRouter({
 				.returning({ id: attempts.id });
 
 			if (attempt && graded.length > 0) {
-				await ctx.db.insert(attemptAnswers).values(
-					graded.map((g) => ({
-						attemptId: attempt.id,
-						questionId: g.questionId,
-						selectedChoiceId:
-							g.type === "single" ? (g.selectedChoiceIds[0] ?? null) : null,
-						selectedChoiceIds:
-							g.type === "single" || g.type === "multiple"
-								? JSON.stringify(g.selectedChoiceIds)
-								: null,
-						responseText: g.responseText,
-						isCorrect: g.isCorrect,
-						earnedPoints: g.earnedPoints,
-					})),
-				);
+				const answerRows = graded.map((g) => ({
+					attemptId: attempt.id,
+					questionId: g.questionId,
+					selectedChoiceId:
+						g.type === "single" ? (g.selectedChoiceIds[0] ?? null) : null,
+					selectedChoiceIds:
+						g.type === "single" || g.type === "multiple"
+							? JSON.stringify(g.selectedChoiceIds)
+							: null,
+					responseText: g.responseText,
+					isCorrect: g.isCorrect,
+					earnedPoints: g.earnedPoints,
+				}));
+				// D1 100 파라미터 제한 (답안 7컬럼 → 12행씩 나눠 insert)
+				for (const part of chunk(answerRows, 12)) {
+					await ctx.db.insert(attemptAnswers).values(part);
+				}
 			}
 
 			return {
@@ -412,16 +417,14 @@ export const examRouter = createTRPCRouter({
 				})
 			).map((a) => a.id);
 
-			if (attemptIds.length > 0) {
+			for (const part of chunk(attemptIds, 90)) {
 				await ctx.db
 					.delete(attemptAnswers)
-					.where(inArray(attemptAnswers.attemptId, attemptIds));
+					.where(inArray(attemptAnswers.attemptId, part));
 			}
 			await ctx.db.delete(attempts).where(eq(attempts.examId, exam.id));
-			if (questionIds.length > 0) {
-				await ctx.db
-					.delete(choices)
-					.where(inArray(choices.questionId, questionIds));
+			for (const part of chunk(questionIds, 90)) {
+				await ctx.db.delete(choices).where(inArray(choices.questionId, part));
 			}
 			await ctx.db.delete(questions).where(eq(questions.examId, exam.id));
 			await ctx.db.delete(exams).where(eq(exams.id, exam.id));

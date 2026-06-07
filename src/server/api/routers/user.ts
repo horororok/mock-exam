@@ -3,6 +3,7 @@ import { count, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "~/server/api/trpc";
+import { chunk } from "~/server/db/chunk";
 import { attemptAnswers, attempts, sessions, users } from "~/server/db/schema";
 
 export const userRouter = createTRPCRouter({
@@ -44,10 +45,10 @@ export const userRouter = createTRPCRouter({
 				})
 			).map((a) => a.id);
 
-			if (attemptIds.length > 0) {
+			for (const part of chunk(attemptIds, 90)) {
 				await ctx.db
 					.delete(attemptAnswers)
-					.where(inArray(attemptAnswers.attemptId, attemptIds));
+					.where(inArray(attemptAnswers.attemptId, part));
 			}
 			await ctx.db.delete(attempts).where(eq(attempts.userId, input.id));
 			await ctx.db.delete(sessions).where(eq(sessions.userId, input.id));
