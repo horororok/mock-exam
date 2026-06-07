@@ -54,16 +54,8 @@ export function AdminDashboard() {
 	}
 
 	return (
-		<div className="mt-6 flex flex-col gap-5">
-			<div className="flex items-center justify-between">
-				<h2 className="text-lg font-semibold">시험 목록</h2>
-				<Link
-					href="/admin/upload"
-					className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
-				>
-					+ 새 시험 등록
-				</Link>
-			</div>
+		<div className="flex flex-col gap-5">
+			<h2 className="text-lg font-semibold">시험 목록</h2>
 
 			{list.isLoading && <p className="text-sm text-slate-500">불러오는 중…</p>}
 
