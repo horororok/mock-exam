@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
-import { Spinner } from "~/components/ui/spinner";
+import { Button } from "~/components/ui/button";
 import { getAnonId } from "~/lib/exam";
 import type { AppRouter } from "~/server/api/root";
 import { api } from "~/trpc/react";
@@ -275,20 +275,14 @@ export function ExamRunner({ exam }: { exam: ExamDetail }) {
 							{answeredCount} / {exam.questions.length} 응답
 						</span>
 					</div>
-					<button
-						type="button"
+					<Button
+						loading={submit.isPending}
+						loadingText="채점 중…"
 						onClick={requestSubmit}
-						disabled={submit.isPending}
-						className="w-full rounded-lg bg-sky-600 px-6 py-2.5 font-semibold text-white transition hover:bg-sky-700 disabled:opacity-60 sm:w-auto sm:py-2"
+						className="w-full sm:w-auto"
 					>
-						{submit.isPending ? (
-							<span className="inline-flex items-center gap-2">
-								<Spinner size="sm" /> 채점 중…
-							</span>
-						) : (
-							"제출하고 채점하기"
-						)}
-					</button>
+						제출하고 채점하기
+					</Button>
 				</div>
 			)}
 

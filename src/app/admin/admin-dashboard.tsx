@@ -4,7 +4,8 @@ import Link from "next/link";
 
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
-import { Loading, Spinner } from "~/components/ui/spinner";
+import { Button } from "~/components/ui/button";
+import { Loading } from "~/components/ui/spinner";
 import { LEVEL_LABELS } from "~/lib/exam";
 import { api } from "~/trpc/react";
 
@@ -97,14 +98,14 @@ export function AdminDashboard() {
 								>
 									열기
 								</Link>
-								<button
-									type="button"
+								<Button
+									variant="danger"
+									size="sm"
+									loading={del.isPending}
 									onClick={() => confirmDelete(exam.slug, exam.title)}
-									disabled={del.isPending}
-									className="inline-flex items-center justify-center rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50"
 								>
-									{del.isPending ? <Spinner size="sm" /> : "삭제"}
-								</button>
+									삭제
+								</Button>
 							</div>
 						</li>
 					))}

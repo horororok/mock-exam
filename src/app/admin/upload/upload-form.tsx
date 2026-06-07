@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useToast } from "~/components/toast/toast-provider";
-import { Spinner } from "~/components/ui/spinner";
+import { Button } from "~/components/ui/button";
 import { LEVEL_LABELS } from "~/lib/exam";
 import {
 	type ExamUpload,
@@ -204,22 +204,16 @@ export function UploadForm() {
 				>
 					검증 / 미리보기
 				</button>
-				<button
-					type="button"
+				<Button
+					loading={submitting}
+					loadingText="생성 중…"
+					disabled={!preview}
 					onClick={submit}
-					disabled={!preview || submitting}
-					className="rounded-lg bg-sky-600 px-5 py-2 font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
 				>
-					{submitting ? (
-						<span className="inline-flex items-center gap-2">
-							<Spinner size="sm" /> 생성 중…
-						</span>
-					) : preview && preview.length > 1 ? (
-						`${preview.length}개 시험 생성`
-					) : (
-						"시험 생성"
-					)}
-				</button>
+					{preview && preview.length > 1
+						? `${preview.length}개 시험 생성`
+						: "시험 생성"}
+				</Button>
 			</div>
 
 			{errors.length > 0 && (

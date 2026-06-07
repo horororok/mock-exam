@@ -3,7 +3,8 @@
 import { useSession } from "~/components/auth/auth-provider";
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
-import { Loading, Spinner } from "~/components/ui/spinner";
+import { Button } from "~/components/ui/button";
+import { Loading } from "~/components/ui/spinner";
 import { api } from "~/trpc/react";
 
 const dateFmt = new Intl.DateTimeFormat("ko-KR", {
@@ -101,14 +102,15 @@ export function UsersTable() {
 									</p>
 								</div>
 								{!isMe && (
-									<button
-										type="button"
+									<Button
+										variant="danger"
+										size="sm"
+										loading={del.isPending}
 										onClick={() => confirmDelete(u.id, u.email)}
-										disabled={del.isPending}
-										className="inline-flex shrink-0 items-center justify-center self-start rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 sm:self-auto"
+										className="shrink-0 self-start sm:self-auto"
 									>
-										{del.isPending ? <Spinner size="sm" /> : "삭제"}
-									</button>
+										삭제
+									</Button>
 								)}
 							</li>
 						);
