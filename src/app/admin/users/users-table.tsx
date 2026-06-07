@@ -3,6 +3,7 @@
 import { useSession } from "~/components/auth/auth-provider";
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
+import { Loading, Spinner } from "~/components/ui/spinner";
 import { api } from "~/trpc/react";
 
 const dateFmt = new Intl.DateTimeFormat("ko-KR", {
@@ -64,7 +65,7 @@ export function UsersTable() {
 				</h2>
 			</div>
 
-			{list.isLoading && <p className="text-sm text-slate-500">불러오는 중…</p>}
+			{list.isLoading && <Loading />}
 
 			{list.error && (
 				<p className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">
@@ -104,9 +105,9 @@ export function UsersTable() {
 										type="button"
 										onClick={() => confirmDelete(u.id, u.email)}
 										disabled={del.isPending}
-										className="shrink-0 self-start rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 sm:self-auto"
+										className="inline-flex shrink-0 items-center justify-center self-start rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 sm:self-auto"
 									>
-										삭제
+										{del.isPending ? <Spinner size="sm" /> : "삭제"}
 									</button>
 								)}
 							</li>

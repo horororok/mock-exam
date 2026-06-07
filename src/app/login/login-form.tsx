@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useToast } from "~/components/toast/toast-provider";
+import { Spinner } from "~/components/ui/spinner";
 import { signIn, signUp } from "~/server/auth/actions";
 
 export function LoginForm() {
@@ -110,7 +111,15 @@ export function LoginForm() {
 					disabled={pending}
 					className="mt-1 rounded-lg bg-sky-600 px-4 py-2 font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
 				>
-					{pending ? "처리 중..." : mode === "signin" ? "로그인" : "회원가입"}
+					{pending ? (
+						<span className="inline-flex items-center gap-2">
+							<Spinner size="sm" /> 처리 중…
+						</span>
+					) : mode === "signin" ? (
+						"로그인"
+					) : (
+						"회원가입"
+					)}
 				</button>
 			</form>
 		</div>

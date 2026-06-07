@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
+import { Loading, Spinner } from "~/components/ui/spinner";
 import { LEVEL_LABELS } from "~/lib/exam";
 import { api } from "~/trpc/react";
 
@@ -57,7 +58,7 @@ export function AdminDashboard() {
 		<div className="flex flex-col gap-5">
 			<h2 className="text-lg font-semibold">시험 목록</h2>
 
-			{list.isLoading && <p className="text-sm text-slate-500">불러오는 중…</p>}
+			{list.isLoading && <Loading />}
 
 			{list.error && (
 				<p className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">
@@ -100,9 +101,9 @@ export function AdminDashboard() {
 									type="button"
 									onClick={() => confirmDelete(exam.slug, exam.title)}
 									disabled={del.isPending}
-									className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+									className="inline-flex items-center justify-center rounded-lg border border-rose-300 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50"
 								>
-									삭제
+									{del.isPending ? <Spinner size="sm" /> : "삭제"}
 								</button>
 							</div>
 						</li>

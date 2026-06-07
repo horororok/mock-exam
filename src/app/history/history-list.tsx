@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { Loading } from "~/components/ui/spinner";
 import { LEVEL_LABELS } from "~/lib/exam";
 import { api } from "~/trpc/react";
 
@@ -14,7 +15,7 @@ export function HistoryList() {
 	const history = api.attempt.history.useQuery();
 
 	if (history.isLoading) {
-		return <p className="mt-8 text-sm text-slate-500">불러오는 중…</p>;
+		return <Loading className="mt-8" />;
 	}
 	if (history.error) {
 		return (

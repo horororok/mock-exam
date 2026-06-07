@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { useSession } from "~/components/auth/auth-provider";
 import { useToast } from "~/components/toast/toast-provider";
+import { Spinner } from "~/components/ui/spinner";
 import { signOut } from "~/server/auth/actions";
 
 /** 헤더용 로그인 상태 표시 + 로그아웃. */
@@ -48,9 +49,9 @@ export function AuthStatus() {
 				type="button"
 				onClick={logout}
 				disabled={pending}
-				className="rounded-lg border border-white/20 px-3 py-1.5 hover:bg-white/10 disabled:opacity-60"
+				className="inline-flex items-center justify-center rounded-lg border border-white/20 px-3 py-1.5 hover:bg-white/10 disabled:opacity-60"
 			>
-				로그아웃
+				{pending ? <Spinner size="sm" /> : "로그아웃"}
 			</button>
 		</div>
 	);
