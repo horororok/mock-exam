@@ -46,8 +46,14 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 const t = initTRPC.context<typeof createTRPCContext>().create({
 	transformer: superjson,
 	errorFormatter({ shape, error }) {
+		// 프로덕션에서는 내부 서버 오류의 원본 메시지(DB/SQL 등)를 그대로 노출하지 않는다.
+		// 의도적 4xx(NOT_FOUND/UNAUTHORIZED/FORBIDDEN/BAD_REQUEST)는 메시지를 유지.
+		const maskInternal =
+			error.code === "INTERNAL_SERVER_ERROR" &&
+			process.env.NODE_ENV === "production";
 		return {
 			...shape,
+			message: maskInternal ? "서버 오류가 발생했습니다." : shape.message,
 			data: {
 				...shape.data,
 				zodError:

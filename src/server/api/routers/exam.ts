@@ -100,13 +100,26 @@ async function insertExam(
 			}
 		}
 	} catch (err) {
-		// 부분 생성 정리 (cascade로 문항/선택지도 삭제)
-		await db.delete(exams).where(eq(exams.id, exam.id));
+		console.error("insertExam failed; cleaning up partial exam", err);
+		// 부분 생성 정리 — FK cascade에 의존하지 않고 child부터 명시 삭제
+		try {
+			const qIds = (
+				await db.query.questions.findMany({
+					where: eq(questions.examId, exam.id),
+					columns: { id: true },
+				})
+			).map((q) => q.id);
+			for (const part of chunk(qIds, 90)) {
+				await db.delete(choices).where(inArray(choices.questionId, part));
+			}
+			await db.delete(questions).where(eq(questions.examId, exam.id));
+			await db.delete(exams).where(eq(exams.id, exam.id));
+		} catch (cleanupErr) {
+			console.error("insertExam cleanup failed", cleanupErr);
+		}
 		throw new TRPCError({
 			code: "INTERNAL_SERVER_ERROR",
-			message: `문항 저장 중 오류가 발생했습니다: ${
-				err instanceof Error ? err.message : String(err)
-			}`,
+			message: "문항 저장 중 오류가 발생했습니다.",
 		});
 	}
 
@@ -330,41 +343,53 @@ export const examRouter = createTRPCRouter({
 				};
 			});
 
-			const [attempt] = await ctx.db
-				.insert(attempts)
-				.values({
-					examId: exam.id,
-					anonId: input.anonId,
-					userId: ctx.session?.user?.id ?? null,
-					status: "submitted",
-					score,
-					maxScore,
-					submittedAt: new Date(),
-				})
-				.returning({ id: attempts.id });
+			let attemptId: number | null = null;
+			try {
+				const [attempt] = await ctx.db
+					.insert(attempts)
+					.values({
+						examId: exam.id,
+						anonId: input.anonId,
+						userId: ctx.session?.user?.id ?? null,
+						status: "submitted",
+						score,
+						maxScore,
+						submittedAt: new Date(),
+					})
+					.returning({ id: attempts.id });
+				attemptId = attempt?.id ?? null;
 
-			if (attempt && graded.length > 0) {
-				const answerRows = graded.map((g) => ({
-					attemptId: attempt.id,
-					questionId: g.questionId,
-					selectedChoiceId:
-						g.type === "single" ? (g.selectedChoiceIds[0] ?? null) : null,
-					selectedChoiceIds:
-						g.type === "single" || g.type === "multiple"
-							? JSON.stringify(g.selectedChoiceIds)
-							: null,
-					responseText: g.responseText,
-					isCorrect: g.isCorrect,
-					earnedPoints: g.earnedPoints,
-				}));
-				// D1 100 파라미터 제한 (답안 7컬럼 → 12행씩 나눠 insert)
-				for (const part of chunk(answerRows, 12)) {
-					await ctx.db.insert(attemptAnswers).values(part);
+				if (attempt && graded.length > 0) {
+					const answerRows = graded.map((g) => ({
+						attemptId: attempt.id,
+						questionId: g.questionId,
+						selectedChoiceId:
+							g.type === "single" ? (g.selectedChoiceIds[0] ?? null) : null,
+						selectedChoiceIds:
+							g.type === "single" || g.type === "multiple"
+								? JSON.stringify(g.selectedChoiceIds)
+								: null,
+						responseText: g.responseText,
+						isCorrect: g.isCorrect,
+						earnedPoints: g.earnedPoints,
+					}));
+					// D1 100 파라미터 제한 (답안 7컬럼 → 12행씩 나눠 insert)
+					for (const part of chunk(answerRows, 12)) {
+						await ctx.db.insert(attemptAnswers).values(part);
+					}
 				}
+			} catch (err) {
+				// 원본 DB 오류는 로그로만 남기고, 클라이언트에는 일반 메시지
+				console.error("exam.submit DB write failed", err);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message:
+						"제출 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+				});
 			}
 
 			return {
-				attemptId: attempt?.id ?? null,
+				attemptId,
 				score,
 				maxScore,
 				results: graded,
