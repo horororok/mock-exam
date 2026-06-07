@@ -17,7 +17,8 @@ import {
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
 const credentials = z.object({
-	email: z.string().email("올바른 이메일을 입력하세요."),
+	// 형식 검증 + 정규화(앞뒤 공백 제거, 소문자) → 중복 확인이 대소문자/공백에 견고
+	email: z.string().trim().toLowerCase().email("올바른 이메일을 입력하세요."),
 	password: z
 		.string()
 		.min(8, "비밀번호는 8자 이상이어야 합니다.")
@@ -45,7 +46,7 @@ export async function signUp(input: {
 		return { ok: false, error: parsed.error.issues[0]?.message ?? "입력 오류" };
 	}
 	const db = getDb();
-	const email = parsed.data.email.toLowerCase();
+	const email = parsed.data.email;
 
 	const existing = await db.query.users.findFirst({
 		where: eq(users.email, email),
@@ -76,7 +77,7 @@ export async function signIn(input: {
 		return { ok: false, error: "이메일 또는 비밀번호가 올바르지 않습니다." };
 	}
 	const db = getDb();
-	const email = parsed.data.email.toLowerCase();
+	const email = parsed.data.email;
 
 	const user = await db.query.users.findFirst({
 		where: eq(users.email, email),
