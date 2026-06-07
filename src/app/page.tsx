@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { AuthStatus } from "~/components/auth/auth-status";
 import { LEVEL_LABELS, LEVEL_ORDER } from "~/lib/exam";
+import { getServerUser } from "~/server/auth";
+import { getAdminEmails, isAdminEmail } from "~/server/auth/admin";
 import type { ExamLevel } from "~/server/db/schema";
 import { api } from "~/trpc/server";
 
@@ -10,6 +12,13 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
 	const exams = await api.exam.list();
+
+	const user = await getServerUser();
+	const admins = getAdminEmails();
+	const canAdmin =
+		admins.length === 0
+			? process.env.NODE_ENV !== "production"
+			: isAdminEmail(user?.email);
 
 	const byLevel = LEVEL_ORDER.map((level) => ({
 		level,
@@ -26,12 +35,14 @@ export default async function Home() {
 						</h1>
 						<div className="flex shrink-0 items-center gap-2">
 							<AuthStatus />
-							<Link
-								href="/admin"
-								className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
-							>
-								시험 관리
-							</Link>
+							{canAdmin && (
+								<Link
+									href="/admin"
+									className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
+								>
+									시험 관리
+								</Link>
+							)}
 						</div>
 					</div>
 					<p className="text-lg text-slate-300">

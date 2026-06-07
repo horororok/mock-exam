@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { AdminTokenField } from "~/components/admin/admin-token-field";
 import { useModal } from "~/components/modal/modal-provider";
 import { useToast } from "~/components/toast/toast-provider";
 import { LEVEL_LABELS } from "~/lib/exam";
@@ -56,8 +55,6 @@ export function AdminDashboard() {
 
 	return (
 		<div className="mt-6 flex flex-col gap-5">
-			<AdminTokenField />
-
 			<div className="flex items-center justify-between">
 				<h2 className="text-lg font-semibold">시험 목록</h2>
 				<Link
@@ -73,8 +70,6 @@ export function AdminDashboard() {
 			{list.error && (
 				<p className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm text-rose-700">
 					목록을 불러오지 못했습니다: {list.error.message}
-					{list.error.data?.code === "UNAUTHORIZED" &&
-						" — 위에 관리자 토큰을 입력하고 저장하세요."}
 				</p>
 			)}
 

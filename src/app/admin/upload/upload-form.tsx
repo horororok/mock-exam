@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { AdminTokenField } from "~/components/admin/admin-token-field";
 import { useToast } from "~/components/toast/toast-provider";
 import { LEVEL_LABELS } from "~/lib/exam";
 import {
@@ -81,8 +80,6 @@ export function UploadForm() {
 
 	return (
 		<div className="mt-6 flex flex-col gap-4">
-			<AdminTokenField />
-
 			<div className="flex flex-wrap items-center gap-3">
 				<label className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100">
 					파일 선택(.json)

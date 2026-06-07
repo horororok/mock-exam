@@ -11,7 +11,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { getSession } from "~/server/auth";
-import { getAdminToken } from "~/server/auth/admin";
+import { getAdminEmails } from "~/server/auth/admin";
 import { getDb } from "~/server/db";
 
 /**
@@ -134,18 +134,33 @@ export const protectedProcedure = t.procedure
 /**
  * Admin procedure
  *
- * 시험 등록/삭제 등 관리 작업용. `ADMIN_TOKEN`이 설정돼 있으면 요청 헤더
- * `x-admin-token`이 일치해야 통과한다. 설정돼 있지 않으면(로컬/미설정) 통과시킨다.
- * 클라이언트는 localStorage의 토큰을 헤더로 실어 보낸다(`trpc/react.tsx`).
+ * 시험 등록/삭제 등 관리 작업용. 로그인한 사용자의 이메일이 `ADMIN_EMAILS`에
+ * 포함돼야 통과한다. `ADMIN_EMAILS` 미설정 시: 개발 환경은 허용(편의),
+ * 프로덕션은 차단.
  */
 export const adminProcedure = t.procedure
 	.use(timingMiddleware)
 	.use(({ ctx, next }) => {
-		const required = getAdminToken();
-		if (required && ctx.headers.get("x-admin-token") !== required) {
+		const admins = getAdminEmails();
+		if (admins.length === 0) {
+			if (process.env.NODE_ENV === "production") {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "관리자가 설정되지 않았습니다 (ADMIN_EMAILS).",
+				});
+			}
+			return next();
+		}
+		if (!ctx.session?.user) {
 			throw new TRPCError({
 				code: "UNAUTHORIZED",
-				message: "관리자 토큰이 필요합니다. (ADMIN_TOKEN)",
+				message: "로그인이 필요합니다.",
+			});
+		}
+		if (!admins.includes(ctx.session.user.email.toLowerCase())) {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message: "관리자 권한이 필요합니다.",
 			});
 		}
 		return next();
