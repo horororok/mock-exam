@@ -6,10 +6,12 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { getSession } from "~/server/auth";
+import { getAdminToken } from "~/server/auth/admin";
 import { getDb } from "~/server/db";
 
 /**
@@ -25,8 +27,11 @@ import { getDb } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+	// session은 현재 항상 null (auth seam). better-auth 연결 시 getSession만 교체.
+	const session = await getSession(opts.headers);
 	return {
 		db: getDb(),
+		session,
 		...opts,
 	};
 };
@@ -104,3 +109,44 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * 로그인한 사용자만 호출할 수 있다. 세션이 없으면 UNAUTHORIZED. 통과하면
+ * `ctx.session.user`가 non-null로 좁혀진다. 지금은 getSession이 항상 null이라
+ * 실제로 통과하지 않지만, auth 연결 후 바로 쓸 수 있도록 자리를 잡아둔다.
+ */
+export const protectedProcedure = t.procedure
+	.use(timingMiddleware)
+	.use(({ ctx, next }) => {
+		if (!ctx.session?.user) {
+			throw new TRPCError({
+				code: "UNAUTHORIZED",
+				message: "로그인이 필요합니다.",
+			});
+		}
+		return next({
+			ctx: { ...ctx, session: { ...ctx.session, user: ctx.session.user } },
+		});
+	});
+
+/**
+ * Admin procedure
+ *
+ * 시험 등록/삭제 등 관리 작업용. `ADMIN_TOKEN`이 설정돼 있으면 요청 헤더
+ * `x-admin-token`이 일치해야 통과한다. 설정돼 있지 않으면(로컬/미설정) 통과시킨다.
+ * 클라이언트는 localStorage의 토큰을 헤더로 실어 보낸다(`trpc/react.tsx`).
+ */
+export const adminProcedure = t.procedure
+	.use(timingMiddleware)
+	.use(({ ctx, next }) => {
+		const required = getAdminToken();
+		if (required && ctx.headers.get("x-admin-token") !== required) {
+			throw new TRPCError({
+				code: "UNAUTHORIZED",
+				message: "관리자 토큰이 필요합니다. (ADMIN_TOKEN)",
+			});
+		}
+		return next();
+	});

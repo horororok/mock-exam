@@ -56,6 +56,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 					headers: () => {
 						const headers = new Headers();
 						headers.set("x-trpc-source", "nextjs-react");
+						// 관리자 토큰(localStorage)을 admin 엔드포인트 보호용 헤더로 전달
+						if (typeof window !== "undefined") {
+							const adminToken = window.localStorage.getItem(
+								"mock-exam:admin-token",
+							);
+							if (adminToken) headers.set("x-admin-token", adminToken);
+						}
 						return headers;
 					},
 				}),
