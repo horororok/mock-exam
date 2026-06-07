@@ -1,8 +1,8 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "5dd1401e-b36d-4a30-9768-b694701b5f5c",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "64c260ab-4100-4e60-9281-effaa55f7cb9",
+	"prevId": "650c486c-062e-4cdd-8cec-085faa89dc77",
 	"tables": {
 		"mock_exam_attempt_answer": {
 			"name": "mock_exam_attempt_answer",
@@ -31,6 +31,13 @@
 				"selectedChoiceId": {
 					"name": "selectedChoiceId",
 					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"selectedChoiceIds": {
+					"name": "selectedChoiceIds",
+					"type": "text",
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false
@@ -414,6 +421,13 @@
 					"notNull": false,
 					"autoincrement": false
 				},
+				"modelAnswer": {
+					"name": "modelAnswer",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
 				"points": {
 					"name": "points",
 					"type": "integer",
@@ -449,6 +463,118 @@
 					"onUpdate": "no action"
 				}
 			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"mock_exam_session": {
+			"name": "mock_exam_session",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text(64)",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"userId": {
+					"name": "userId",
+					"type": "text(36)",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"expiresAt": {
+					"name": "expiresAt",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false,
+					"default": "(unixepoch())"
+				}
+			},
+			"indexes": {
+				"session_user_idx": {
+					"name": "session_user_idx",
+					"columns": ["userId"],
+					"isUnique": false
+				}
+			},
+			"foreignKeys": {
+				"mock_exam_session_userId_mock_exam_user_id_fk": {
+					"name": "mock_exam_session_userId_mock_exam_user_id_fk",
+					"tableFrom": "mock_exam_session",
+					"tableTo": "mock_exam_user",
+					"columnsFrom": ["userId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"mock_exam_user": {
+			"name": "mock_exam_user",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text(36)",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"email": {
+					"name": "email",
+					"type": "text(256)",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"name": {
+					"name": "name",
+					"type": "text(128)",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"passwordHash": {
+					"name": "passwordHash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false,
+					"default": "(unixepoch())"
+				}
+			},
+			"indexes": {
+				"mock_exam_user_email_unique": {
+					"name": "mock_exam_user_email_unique",
+					"columns": ["email"],
+					"isUnique": true
+				},
+				"user_email_idx": {
+					"name": "user_email_idx",
+					"columns": ["email"],
+					"isUnique": false
+				}
+			},
+			"foreignKeys": {},
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
 			"checkConstraints": {}

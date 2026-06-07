@@ -1,8 +1,8 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "5dd1401e-b36d-4a30-9768-b694701b5f5c",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "650c486c-062e-4cdd-8cec-085faa89dc77",
+	"prevId": "5dd1401e-b36d-4a30-9768-b694701b5f5c",
 	"tables": {
 		"mock_exam_attempt_answer": {
 			"name": "mock_exam_attempt_answer",
@@ -31,6 +31,13 @@
 				"selectedChoiceId": {
 					"name": "selectedChoiceId",
 					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"selectedChoiceIds": {
+					"name": "selectedChoiceIds",
+					"type": "text",
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false
@@ -409,6 +416,13 @@
 				},
 				"answerKey": {
 					"name": "answerKey",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"modelAnswer": {
+					"name": "modelAnswer",
 					"type": "text",
 					"primaryKey": false,
 					"notNull": false,
