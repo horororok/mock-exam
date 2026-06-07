@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import {
+	type ExamUpload,
 	examUploadSchema,
 	normalizeShort,
 	parseAcceptedAnswers,
@@ -13,6 +14,7 @@ import {
 	createTRPCRouter,
 	publicProcedure,
 } from "~/server/api/trpc";
+import { getDb } from "~/server/db";
 import {
 	attemptAnswers,
 	attempts,
@@ -23,6 +25,90 @@ import {
 } from "~/server/db/schema";
 
 const levelSchema = z.enum(EXAM_LEVELS);
+
+/**
+ * 업로드된 1개 시험을 DB에 생성한다 (슬러그 중복 시 -2, -3 …).
+ * create / createMany에서 공유. 실패 시 부분 생성분을 정리하고 throw.
+ */
+async function insertExam(
+	db: ReturnType<typeof getDb>,
+	input: ExamUpload,
+): Promise<{ slug: string; examId: number; questionCount: number }> {
+	const base = slugify(input.slug ?? input.title);
+	let slug = base;
+	for (let i = 2; ; i++) {
+		const existing = await db.query.exams.findFirst({
+			where: eq(exams.slug, slug),
+			columns: { id: true },
+		});
+		if (!existing) break;
+		slug = `${base}-${i}`;
+	}
+
+	const [exam] = await db
+		.insert(exams)
+		.values({
+			slug,
+			title: input.title,
+			description: input.description ?? null,
+			level: input.level,
+			subject: input.subject ?? null,
+			durationMinutes: input.durationMinutes ?? null,
+			published: input.published,
+		})
+		.returning({ id: exams.id });
+
+	if (!exam) {
+		throw new TRPCError({
+			code: "INTERNAL_SERVER_ERROR",
+			message: "시험 생성에 실패했습니다.",
+		});
+	}
+
+	try {
+		for (let qi = 0; qi < input.questions.length; qi++) {
+			const q = input.questions[qi]!;
+			const answerKey = q.type === "short" ? JSON.stringify(q.answers) : null;
+			const modelAnswer = q.type === "essay" ? (q.modelAnswer ?? null) : null;
+
+			const [question] = await db
+				.insert(questions)
+				.values({
+					examId: exam.id,
+					order: qi + 1,
+					type: q.type,
+					prompt: q.prompt,
+					passage: q.passage ?? null,
+					answerKey,
+					modelAnswer,
+					points: q.points,
+				})
+				.returning({ id: questions.id });
+
+			if (question && (q.type === "single" || q.type === "multiple")) {
+				await db.insert(choices).values(
+					q.choices.map((c, ci) => ({
+						questionId: question.id,
+						order: ci + 1,
+						content: c.content,
+						isCorrect: c.correct,
+					})),
+				);
+			}
+		}
+	} catch (err) {
+		// 부분 생성 정리 (cascade로 문항/선택지도 삭제)
+		await db.delete(exams).where(eq(exams.id, exam.id));
+		throw new TRPCError({
+			code: "INTERNAL_SERVER_ERROR",
+			message: `문항 저장 중 오류가 발생했습니다: ${
+				err instanceof Error ? err.message : String(err)
+			}`,
+		});
+	}
+
+	return { slug, examId: exam.id, questionCount: input.questions.length };
+}
 
 export const examRouter = createTRPCRouter({
 	/** 공개된 모의고사 목록. level로 필터 가능. */
@@ -103,87 +189,40 @@ export const examRouter = createTRPCRouter({
 	 */
 	create: adminProcedure
 		.input(examUploadSchema)
+		.mutation(({ ctx, input }) => insertExam(ctx.db, input)),
+
+	/**
+	 * 여러 시험을 한 번에 생성. 항목별로 처리하며, 실패한 시험은 건너뛰고
+	 * 결과를 보고한다(전체 롤백 없음).
+	 */
+	createMany: adminProcedure
+		.input(z.array(examUploadSchema).min(1).max(50))
 		.mutation(async ({ ctx, input }) => {
-			// 고유 슬러그 확보 (중복 시 -2, -3 …)
-			const base = slugify(input.slug ?? input.title);
-			let slug = base;
-			for (let i = 2; ; i++) {
-				const existing = await ctx.db.query.exams.findFirst({
-					where: eq(exams.slug, slug),
-					columns: { id: true },
-				});
-				if (!existing) break;
-				slug = `${base}-${i}`;
-			}
-
-			const [exam] = await ctx.db
-				.insert(exams)
-				.values({
-					slug,
-					title: input.title,
-					description: input.description ?? null,
-					level: input.level,
-					subject: input.subject ?? null,
-					durationMinutes: input.durationMinutes ?? null,
-					published: input.published,
-				})
-				.returning({ id: exams.id });
-
-			if (!exam) {
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "시험 생성에 실패했습니다.",
-				});
-			}
-
-			try {
-				for (let qi = 0; qi < input.questions.length; qi++) {
-					const q = input.questions[qi]!;
-					const answerKey =
-						q.type === "short" ? JSON.stringify(q.answers) : null;
-					const modelAnswer =
-						q.type === "essay" ? (q.modelAnswer ?? null) : null;
-
-					const [question] = await ctx.db
-						.insert(questions)
-						.values({
-							examId: exam.id,
-							order: qi + 1,
-							type: q.type,
-							prompt: q.prompt,
-							passage: q.passage ?? null,
-							answerKey,
-							modelAnswer,
-							points: q.points,
-						})
-						.returning({ id: questions.id });
-
-					if (question && (q.type === "single" || q.type === "multiple")) {
-						await ctx.db.insert(choices).values(
-							q.choices.map((c, ci) => ({
-								questionId: question.id,
-								order: ci + 1,
-								content: c.content,
-								isCorrect: c.correct,
-							})),
-						);
-					}
+			const results: Array<
+				| { ok: true; title: string; slug: string; questionCount: number }
+				| { ok: false; title: string; error: string }
+			> = [];
+			for (const exam of input) {
+				try {
+					const r = await insertExam(ctx.db, exam);
+					results.push({
+						ok: true,
+						title: exam.title,
+						slug: r.slug,
+						questionCount: r.questionCount,
+					});
+				} catch (err) {
+					results.push({
+						ok: false,
+						title: exam.title,
+						error: err instanceof Error ? err.message : String(err),
+					});
 				}
-			} catch (err) {
-				// 부분 생성 정리 (cascade로 문항/선택지도 삭제)
-				await ctx.db.delete(exams).where(eq(exams.id, exam.id));
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: `문항 저장 중 오류가 발생했습니다: ${
-						err instanceof Error ? err.message : String(err)
-					}`,
-				});
 			}
-
 			return {
-				slug,
-				examId: exam.id,
-				questionCount: input.questions.length,
+				created: results.filter((r) => r.ok).length,
+				total: input.length,
+				results,
 			};
 		}),
 
